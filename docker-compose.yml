@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+
+  substation1:
+    build: ./substation_service
+    container_name: substation1
+    ports:
+      - "5001:5001"
+
+  substation2:
+    build: ./substation_service
+    container_name: substation2
+    ports:
+      - "5002:5001"
+
+  substation3:
+    build: ./substation_service
+    container_name: substation3
+    ports:
+      - "5003:5001"
+
+  load_balancer:
+    build: ./load_balancer
+    container_name: load_balancer
+    ports:
+      - "5000:5000"
+    depends_on:
+      - substation1
+      - substation2
+      - substation3
+
+  charge_request_service:
+    build: ./charge_request_service
+    container_name: charge_request_service
+    ports:
+      - "4000:4000"
+    depends_on:
+      - load_balancer
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./monitoring/grafana:/var/lib/grafana
